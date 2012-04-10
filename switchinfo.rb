@@ -23,7 +23,7 @@ def parse_opts!
     when 'list_switches'
       parse_opts_list_switches!
     else
-      usage!("Unknown action: #{@option[:action]}")
+      usage!("Unknown action: #{@options[:action]}")
     end
 
   else
