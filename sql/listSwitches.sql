@@ -1,4 +1,9 @@
 --
+-- COPYRIGHT (C) 2012, ANTELOPE ENTERPRISES AND JOEL C. MASLAK
+-- ALL RIGHTS RESERVED
+--
+
+--
 -- Lists one or all switch records, sorted by switchid
 --
 -- If a value for i_switch_id, i_hostname, i_descr, or i_snmpcommunity

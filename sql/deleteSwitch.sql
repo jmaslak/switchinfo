@@ -1,4 +1,9 @@
 --
+-- COPYRIGHT (C) 2012, ANTELOPE ENTERPRISES AND JOEL C. MASLAK
+-- ALL RIGHTS RESERVED
+--
+
+--
 -- Removes a switch, when given a switch_id
 --
 -- Also removes all switchport and mac_history records that references the

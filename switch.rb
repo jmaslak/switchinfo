@@ -1,3 +1,8 @@
+#
+# COPYRIGHT (C) 2012, ANTELOPE ENTERPRISES AND JOEL C. MASLAK
+# ALL RIGHTS RESERVED
+#
+
 require 'snmp'
 
 class InvalidDataException < RuntimeError

@@ -1,4 +1,9 @@
 --
+-- COPYRIGHT (C) 2012, ANTELOPE ENTERPRISES AND JOEL C. MASLAK
+-- ALL RIGHTS RESERVED
+--
+
+--
 -- Creates (if NULL passed in as switch_id) or updates (all other values of
 -- switch_id) switch records.
 --

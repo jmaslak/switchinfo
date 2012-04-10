@@ -1,4 +1,8 @@
 #!/usr/bin/ruby -w
+#
+# COPYRIGHT (C) 2012, ANTELOPE ENTERPRISES AND JOEL C. MASLAK
+# ALL RIGHTS RESERVED
+#
 
 require 'optparse'
 
