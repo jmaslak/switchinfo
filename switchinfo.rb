@@ -20,6 +20,8 @@ def parse_opts!
       parse_opts_add_switch!
     when 'modify_switch'
       parse_opts_modify_switch!
+    when 'delete_switch'
+      parse_opts_delete_switch!
     when 'list_switches'
       parse_opts_list_switches!
     else
@@ -139,6 +141,31 @@ def parse_opts_modify_switch!
   end
 end
 
+def parse_opts_delete_switch!
+  optparse = OptionParser.new do |opts|
+
+    opts.on('-s', '--switch-id SWITCH-ID', 'Switch ID to delete') do |switch_id|
+      @options[:switch_id] = switch_id
+    end
+
+    @options[:help] = nil
+    opts.on('--help', 'Display this screen') do
+      usage!
+    end
+
+  end
+  
+  optparse.parse!
+
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+  
+  if !@options[:switch_id]
+    usage!("Must supply switch-id (--switch-id=...)")
+  end
+end
+
 def parse_opts_list_switches!
   if ARGV.size > 0
     usage!("Unknown arguments: #{ARGV.join(', ')}")
@@ -161,7 +188,7 @@ def usage!(text=nil)
   STDERR.puts "                             switch's description"
   STDERR.puts "    [-c|--community COMMUNITY] (REQUIRED) SNMP community to use"
   STDERR.puts ""
-  STDERR.puts "  modify_switch: Modify a new switch to the configuration.  Uses the"
+  STDERR.puts "  modify_switch: Modify a switch to the configuration.  Uses the"
   STDERR.puts "              following options (leaves unsupplied options unchanged):"
   STDERR.puts "    [-s|--switch-id SWITCH-ID] (REQUIRED) Switch ID to modify (use"
   STDERR.puts "                               list_switches to obtain switch ID)"
@@ -169,6 +196,11 @@ def usage!(text=nil)
   STDERR.puts "    [-d|--descr DESCRIPTION] (OPTIONAL) If not found, use HOSTNAME for"
   STDERR.puts "                             switch's description"
   STDERR.puts "    [-c|--community COMMUNITY] (OPTIONAL) SNMP community to use"
+  STDERR.puts ""
+  STDERR.puts "  delete_switch: Delete switch from the configuration.  Uses the"
+  STDERR.puts "                 following option:"
+  STDERR.puts "    [-s|--switch-id SWITCH-ID] (REQUIRED) Switch ID to delete (use"
+  STDERR.puts "                               list_switches to obtain switch ID)"
   STDERR.puts ""
   STDERR.puts "  list_switches: List all switches"
   STDERR.puts ""
@@ -286,6 +318,8 @@ def main
                      @options[:hostname],
                      @options[:descr],
                      @options[:community])
+  when 'delete_switch'
+    sc.delete_switch(@options[:switch_id])
   when 'list_switches'
     list_switches(sc)
   end

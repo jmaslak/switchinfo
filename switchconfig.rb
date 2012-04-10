@@ -86,6 +86,29 @@ class SwitchConfig
     return retvalue
   end
 
+  # Delete a switch
+  # 
+  # Provide a switch_id
+  #
+  # Note that this will result in ALL HISTORY FOR THE SWITCH BEING LOST!!!!!
+  def delete_switch(switch_id)
+    db_cached_connect
+
+    retvalue = nil
+    
+    sql = 'SELECT deleteSwitch(?)'
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switch_id)
+      sth.each do |row|
+        retvalue = row[0]
+        puts "Debug: #{retvalue}" if $DEBUG
+      end
+    end
+
+    return retvalue
+  end
+
+
   # List switches
   def list_switches(switch_id=nil, hostname=nil, descr=nil, community=nil)
     db_cached_connect
