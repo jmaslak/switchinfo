@@ -112,8 +112,26 @@ class SwitchConfig
     return retvalue
   end
 
-
   # List switches
+  #
+  # Arguments:
+  #  switch_id: The specific switch_id to list
+  #  hostname: A hostname to require for a match
+  #  descr: A description to require for a match
+  #  community: An SNMP community to require for a match
+  #
+  # Any argument that is passed in as nil will match all values for that
+  # parameter.  Specifically defined values will require the returned records
+  # to match exactly.
+  #
+  # Returns:
+  #   Array of hashs
+  #     Each array element represents one row (one switch)
+  #     Within each array element is a hash with the following keys;
+  #       switch_id     -> The switch ID
+  #       hostname      -> The host name
+  #       descr         -> The switch's description
+  #       snmpcommunity -> The SNMP RO community used to connect to the switch
   def list_switches(switch_id=nil, hostname=nil, descr=nil, community=nil)
     db_cached_connect
 
