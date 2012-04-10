@@ -20,6 +20,8 @@ def parse_opts!
     parse_global_opts!
 
     case @options[:action]
+    when 'help', '--help', '-h', '-?', '/?'
+      usage!
     when 'add_switch'
       parse_opts_add_switch!
     when 'modify_switch'
@@ -84,11 +86,6 @@ def parse_opts_add_switch!
       @options[:community] = community
     end
 
-    @options[:help] = nil
-    opts.on('--help', 'Display this screen') do
-      usage!
-    end
-
   end
   
   optparse.parse!
@@ -126,12 +123,6 @@ def parse_opts_modify_switch!
     opts.on('-s', '--switch-id SWITCH-ID', 'Switch ID to modify') do |switch_id|
       @options[:switch_id] = switch_id
     end
-
-    @options[:help] = nil
-    opts.on('--help', 'Display this screen') do
-      usage!
-    end
-
   end
   
   optparse.parse!
@@ -147,16 +138,9 @@ end
 
 def parse_opts_delete_switch!
   optparse = OptionParser.new do |opts|
-
     opts.on('-s', '--switch-id SWITCH-ID', 'Switch ID to delete') do |switch_id|
       @options[:switch_id] = switch_id
     end
-
-    @options[:help] = nil
-    opts.on('--help', 'Display this screen') do
-      usage!
-    end
-
   end
   
   optparse.parse!
