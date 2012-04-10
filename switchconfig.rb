@@ -157,4 +157,120 @@ class SwitchConfig
     return retvalue
   end
 
+  # List switchports
+  #
+  # Arguments:
+  #  switch_id: The specific switch_id to list
+  #  name: A portname to require for a match
+  #  descr: A description to require for a match
+  #  portindex: A port index to require for a match
+  #  bridgeport: A bridge port to require for a match
+  #  uplink: An uplink to require for a match (use 0 or 1)
+  #  active: Only show active ports? (use 0 or 1)
+  #
+  # Any argument that is passed in as nil will match all values for that
+  # parameter.  Specifically defined values will require the returned records
+  # to match exactly.
+  #
+  # Returns:
+  #   Array of hashs
+  #     Each array element represents one row (one switchport)
+  #     Within each array element is a hash with the following keys;
+  #       switch_id     -> The switch ID
+  #       name          -> The port name
+  #       descr         -> The port description
+  #       portindex     -> The port index (IF-MIB)
+  #       bridgeport    -> The bridge port (BRIDGE-MIB)
+  #       uplink        -> Is port an uplink?
+  #       active        -> Is port active?
+  def list_switchports(switch_id=nil,
+                       name=nil,
+                       descr=nil,
+                       portindex=nil,
+                       bridgeport=nil,
+                       uplink=nil,
+                       active=nil)
+    db_cached_connect
+
+    retvalue = []
+
+    sql = "SELECT switch_id,
+                  switchport_id,
+                  name,
+                  descr,
+                  portindex,
+                  bridgeport,
+                  uplink,
+                  active
+           FROM   switchport
+           WHERE  COALESCE(?, switch_id) = switch_id
+             AND  COALESCE(?, name) = name
+             AND  COALESCE(?, descr) = descr
+             AND  COALESCE(?, portindex) = portindex
+             AND  COALESCE(?, bridgeport) = bridgeport
+             AND  COALESCE(?, uplink) = uplink
+             AND  COALESCE(?, active) = active"
+
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switch_id, name, descr, portindex, bridgeport, uplink, active)
+      sth.fetch_hash do |hash|
+        retvalue.push(hash)
+      end
+    end
+
+    return retvalue
+  end
+
+  # Get a list of the active MAC addresses
+  #
+  # Returns array of strings (MAC)
+  def active_macs
+    db_cached_connect
+
+    retvalue = []
+
+    sql = "SELECT M.mac
+           FROM   mac M,
+                  mac_history MH
+           WHERE  M.mac_id = MH.mac_id
+             AND  NOW() BETWEEN MH.start_dt AND MH.end_dt"
+
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switch_id, name, descr, portindex, bridgeport, uplink, active)
+      sth.fetch_hash do |hash|
+        retvalue.push(hash['mac'])
+      end
+    end
+
+    return retvalue
+  end
+
+
+  # "Renew" a switchport - adds it if it is new, leaves it alone (in DB) if
+  # it is unchanged, or updates it if it is now different from the DB (marks
+  # old port as "not active" and creates new records)
+  #
+  # Arguments:
+  #   switch_id  -> Switch's ID
+  #   name       -> Switch port's descr (IF-MIB)
+  #   portindex  -> Switch port's index (IF-MIB)
+  #   bridgeport -> Switch port's bridge port (BRIDGE-MIB)
+  #
+  # Returns switchport ID if modified
+  def renew_switchport(switch_id, name, portindex, bridgeport)
+    db_cached_connect
+
+    retvalue = nil
+
+    sql = 'SELECT addOrMoveSwitchport(?, ?, ?, ?)'
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switch_id, name, portindex, bridgeport)
+      sth.each do |row|
+        retvalue = row[0]
+      end
+    end
+    
+    return retvalue
+  end
+
 end

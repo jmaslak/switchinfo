@@ -30,6 +30,10 @@ def parse_opts!
       parse_opts_delete_switch!
     when 'list_switches'
       parse_opts_list_switches!
+    when 'list_switchports'
+      parse_opts_list_switchports!
+    when 'scan'
+      parse_opts_scan!
     else
       usage!("Unknown action: #{@options[:action]}")
     end
@@ -160,6 +164,19 @@ def parse_opts_list_switches!
   end
 end
 
+def parse_opts_list_switchports!
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+end
+
+def parse_opts_scan!
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+end
+
+
 def usage!(text=nil)
   if text
     STDERR.puts text
@@ -192,6 +209,10 @@ def usage!(text=nil)
   STDERR.puts ""
   STDERR.puts "  list_switches: List all switches"
   STDERR.puts ""
+  STDERR.puts "  list_switchports: List all switch ports"
+  STDERR.puts ""
+  STDERR.puts "  scan: Perform interface and MAC scan"
+  STDERR.puts ""
   STDERR.puts "Options Applicable to All Actions:"
   STDERR.puts "  [--dbhost HOSTNAME] (Defautl: localhost) Hostname of database server"
   STDERR.puts "  [--dbuser USERNAME] (Default: switch) Username of database user"
@@ -212,6 +233,30 @@ def list_switches(switchconfig)
                      ['number', 'string', 'string', 'string'])
   puts ""
 
+end
+
+def list_switchports(switchconfig)
+  results = switchconfig.list_switchports
+
+  pretty_print_table(results,
+                     ['switch_id', 'switchport_id', 'descr', 'name', 'portindex', 'bridgeport', 'uplink', 'active'],
+                     ['Switch ID', 'Swithport ID', 'Description', 'Name', 'Port Index', 'Bridge Port', 'Uplink', 'Active'],
+                     ['number', 'number', 'string', 'string', 'number', 'number', 'string', 'string'])
+  puts ""
+
+end
+
+def scan(switchconfig)
+  switchconfig.list_switches().each do |switchele|
+    $USERDEBUG and puts switchele.inspect
+    switch = Switch.new(switchele['hostname'], switchele['snmpcommunity'])
+    switch.getPortDetailList.each do |port|
+      switchconfig.renew_switchport(switchele['switch_id'],
+                                    port[:name],
+                                    port[:portindex],
+                                    port[:bridgeport])
+    end
+  end
 end
 
 def pretty_print_table(table, columns, alias_list, type_list)
@@ -310,8 +355,14 @@ def main
     sc.delete_switch(@options[:switch_id])
   when 'list_switches'
     list_switches(sc)
+  when 'list_switchports'
+    list_switchports(sc)
+  when 'scan'
+    scan(sc)
   end
 end
 
+# $USERDEBUG=1
+$USERDEBUG=nil
 main
 

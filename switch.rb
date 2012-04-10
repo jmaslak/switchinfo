@@ -15,7 +15,7 @@ class Switch
   attr_accessor :uplinks
   attr_accessor :descriptions
 
-  def initialize(name, community, uplinks, descriptions)
+  def initialize(name, community, uplinks=nil, descriptions=nil)
     @name = name
     @community = community
     @interfaces = {}
@@ -27,6 +27,44 @@ class Switch
     updateInterfaces!
     updateBridgePortIndexes!
     updateForwardingTable!
+  end
+
+  # Get an array of hashes representing the switchports (gathered
+  # from SNMP)
+  #
+  # Returns:
+  #  Array (each row represents one port)
+  #   Array element is a hash with the following keys:
+  #    :portindex
+  #    :name
+  #    :bridgeport
+  def getPortDetailList
+    ports = []
+
+    # @interfaces contains port descriptions
+    # Key   = ifIndex (-> portindex)
+    # Value = ifDescr (-> name)
+
+    # @portindex contains bridge to ifindex mapping
+    # Key   = dot1dBasePort        (-> bridgeport)
+    # Value = dot1dBasePortIfIndex (-> portindex)
+
+    # Build bridgemap
+    #  Key   = portindex / ifindex
+    #  Value = bridgeport
+    bridgemap = @portindex.invert
+
+    @interfaces.each do |ifindex, ifdescr|
+      port = {}
+      port[:portindex]  = ifindex
+      port[:name]       = ifdescr
+      port[:bridgeport] = bridgemap[ifindex]
+      if !port[:bridgeport].nil?
+        ports.push(port)
+      end
+    end
+
+    return ports
   end
 
   def getMacs(showUplinks=true)
