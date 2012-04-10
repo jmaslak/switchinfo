@@ -18,6 +18,8 @@ def parse_opts!
     case @options[:action]
     when 'add_switch'
       parse_opts_add_switch!
+    when 'modify_switch'
+      parse_opts_modify_switch!
     when 'list_switches'
       parse_opts_list_switches!
     else
@@ -100,6 +102,43 @@ def parse_opts_add_switch!
   @options[:descr] ||= @options[:hostname]
 end
 
+def parse_opts_modify_switch!
+  optparse = OptionParser.new do |opts|
+
+    opts.on('-h', '--hostname HOSTNAME', 'Hostname of the switch') do |hostname|
+      @options[:hostname] = hostname
+    end
+
+    opts.on('-d', '--descr DESCRIPTION', 'Description of switch') do |descr|
+      @options[:descr] = descr
+    end
+
+    opts.on('-c', '--community COMMUNITY', 'SNMP community to use for switch') do |community|
+      @options[:community] = community
+    end
+
+    opts.on('-s', '--switch-id SWITCH-ID', 'Switch ID to modify') do |switch_id|
+      @options[:switch_id] = switch_id
+    end
+
+    @options[:help] = nil
+    opts.on('--help', 'Display this screen') do
+      usage!
+    end
+
+  end
+  
+  optparse.parse!
+
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+  
+  if !@options[:switch_id]
+    usage!("Must supply switch-id (--switch-id=...)")
+  end
+end
+
 def parse_opts_list_switches!
   if ARGV.size > 0
     usage!("Unknown arguments: #{ARGV.join(', ')}")
@@ -120,7 +159,16 @@ def usage!(text=nil)
   STDERR.puts "    [-n|--hostname HOSTNAME] (REQUIRED) Hostname to use for switch"
   STDERR.puts "    [-d|--descr DESCRIPTION] (OPTIONAL) If not found, use HOSTNAME for"
   STDERR.puts "                             switch's description"
-  STDERR.puts "    [-c|--community COMMUNITY] (REQUIRE) SNMP community to use"
+  STDERR.puts "    [-c|--community COMMUNITY] (REQUIRED) SNMP community to use"
+  STDERR.puts ""
+  STDERR.puts "  modify_switch: Modify a new switch to the configuration.  Uses the"
+  STDERR.puts "              following options (leaves unsupplied options unchanged):"
+  STDERR.puts "    [-s|--switch-id SWITCH-ID] (REQUIRED) Switch ID to modify (use"
+  STDERR.puts "                               list_switches to obtain switch ID)"
+  STDERR.puts "    [-n|--hostname HOSTNAME] (OPTIONAL) Hostname to use for switch"
+  STDERR.puts "    [-d|--descr DESCRIPTION] (OPTIONAL) If not found, use HOSTNAME for"
+  STDERR.puts "                             switch's description"
+  STDERR.puts "    [-c|--community COMMUNITY] (OPTIONAL) SNMP community to use"
   STDERR.puts ""
   STDERR.puts "  list_switches: List all switches"
   STDERR.puts ""
@@ -233,6 +281,11 @@ def main
     sc.add_switch(@options[:hostname],
                   @options[:descr],
                   @options[:community])
+  when 'modify_switch'
+    sc.modify_switch(@options[:switch_id],
+                     @options[:hostname],
+                     @options[:descr],
+                     @options[:community])
   when 'list_switches'
     list_switches(sc)
   end

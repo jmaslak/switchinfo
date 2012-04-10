@@ -33,32 +33,53 @@ class SwitchConfig
                       @database[:password])
   end
 
-  # CLose the database handle
+  # Close the database handle
   def db_close
     @dbh and @dbh.close
     @dbh = nil
   end
 
-  # Add a switch to the 
+  # Add a switch to the database
   def add_switch(hostname, descr, community)
+    db_cached_connect
+
+    retvalue = nil
+
+    begin
+      modify_switch(nil, hostname, descr, community)
+    rescue DBI::ProgrammingError => e
+      if e.message[/Key .* already exists/]
+        STDERR.puts "This switch (#{hostname}) already exists, not adding."
+      else
+        raise e
+      end
+    end
+
+    return retvalue
+  end
+
+  # Modify a switch in the database
+  # Will also add a switch if switch_id is empty
+  #
+  # To Add: Provide hostname, descr, and community, but pass nil for switch_id
+  #
+  # To Modify: Provide switch_id and any element (hostname, descr, community)
+  # that you wish to change.  Other elements should be passed as nil
+  #
+  # If an invalid switch_id is passed, no action will be performed
+  #
+  # Returns the switch_id of the modified element
+  def modify_switch(switch_id, hostname, descr, community)
     db_cached_connect
 
     retvalue = nil
 
     sql = 'SELECT addOrUpdateSwitch(?, ?, ?, ?)'
     @dbh.prepare(sql) do |sth|
-      begin
-        sth.execute(nil, hostname, descr, community)
-        sth.each do |row|
-          retvalue = row[0]
-          puts "Debug: #{retvalue}" if $DEBUG
-        end
-      rescue DBI::ProgrammingError => e
-        if e.message[/Key .* already exists/]
-          STDERR.puts "This switch (#{hostname}) already exists, not adding."
-        else
-          raise e
-        end
+      sth.execute(switch_id, hostname, descr, community)
+      sth.each do |row|
+        retvalue = row[0]
+        puts "Debug: #{retvalue}" if $DEBUG
       end
     end
 
