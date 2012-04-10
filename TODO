@@ -1,6 +1,5 @@
 TODOs:
 
-- Remove read-only SPs
 - Refactor help option
 - Add confirmation to delete history (with force option)
 - Add better documetnation for list_switches on return type
