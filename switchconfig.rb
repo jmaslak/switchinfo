@@ -273,4 +273,49 @@ class SwitchConfig
     return retvalue
   end
 
+  # "Renew" a MAC - adds it if it is new, updates last_seen and end_dt's,
+  # manages old views of it on other switch ports
+  #
+  # NOTE! CALL startRun before and endRun after a batch of renew_mac()
+  #
+  # Arguments:
+  #   switch_id  -> Switch's ID
+  #   bridgeport -> Switch port's bridge port (BRIDGE-MIB)
+  #   mac        -> MAC address
+  #
+  # Returns 1
+  def renew_mac(switch_id, bridgeport, mac)
+    retvalue = nil
+
+    sql = 'SELECT addOrMoveMac(?, ?, ?)'
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switch_id, bridgeport, mac)
+      sth.each do |row|
+        retvalue = row[0]
+      end
+    end
+    
+    return retvalue
+  end
+
+  # Initialize data, table values, transaction, etc. for renew_mac()
+  #
+  # No arguments or return value
+  def startRun
+    db_cached_connect
+
+    @dbh.do("BEGIN TRANSACTION;")
+    @dbh.do("SELECT startRun();")
+  end
+
+  # Finalize data, table values, transaction, etc. for renew_mac()
+  #
+  # No arguments or return value
+    def endRun
+    db_cached_connect
+
+    @dbh.do("SELECT endRun();")
+    @dbh.do("COMMIT TRANSACTION;")
+  end
+
 end

@@ -247,16 +247,33 @@ def list_switchports(switchconfig)
 end
 
 def scan(switchconfig)
+  
+  switchconfig.startRun
+
   switchconfig.list_switches().each do |switchele|
     $USERDEBUG and puts switchele.inspect
+
     switch = Switch.new(switchele['hostname'], switchele['snmpcommunity'])
+
+
     switch.getPortDetailList.each do |port|
       switchconfig.renew_switchport(switchele['switch_id'],
                                     port[:name],
                                     port[:portindex],
                                     port[:bridgeport])
     end
+
+    switch.getMacsWithBridgeports.each do |mac, portlist|
+      portlist.each do |port|
+        switchconfig.renew_mac(switchele['switch_id'],
+                               port,
+                               mac);
+      end
+    end
+    
   end
+  
+  switchconfig.endRun
 end
 
 def pretty_print_table(table, columns, alias_list, type_list)

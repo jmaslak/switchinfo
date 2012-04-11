@@ -75,6 +75,14 @@ class Switch
     end
   end
 
+  def getMacsWithBridgeports(showUplinks=true)
+    if showUplinks
+      @mactable
+    else
+      getMactableEliminateUplinks
+    end
+  end
+
   def getMacsWithPorts(showUplinks=true)
     if showUplinks
       table = @mactable
@@ -173,8 +181,7 @@ class Switch
 
     fdbTable_columns = [
       'dot1dTpFdbAddress',
-      'dot1dTpFdbPort',
-      'dot1dTpFdbStatus'
+      'dot1dTpFdbPort'
     ]
 
     SNMP::Manager.open(:Host => @name,
@@ -190,6 +197,15 @@ class Switch
 
         @mactable[mac] ||= []
         @mactable[mac].push(port)
+
+        # Handle missing port mappings
+        # MAJOR kludge!
+        if ! @portindex.has_key?(port)
+          @portindex[port] = port
+        end
+        if ! @interfaces.has_key?(@portindex[port])
+          @interfaces[@portindex[port]] = port
+        end
        
       end
     end
