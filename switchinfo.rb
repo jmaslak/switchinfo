@@ -30,6 +30,8 @@ def parse_opts!
       parse_opts_delete_switch!
     when 'list_switches'
       parse_opts_list_switches!
+    when 'list_macs'
+      parse_opts_list_macs!
     when 'list_switchports'
       parse_opts_list_switchports!
     when 'modify_switchport'
@@ -166,6 +168,12 @@ def parse_opts_list_switches!
   end
 end
 
+def parse_opts_list_macs!
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+end
+
 def parse_opts_list_switchports!
   if ARGV.size > 0
     usage!("Unknown arguments: #{ARGV.join(', ')}")
@@ -266,6 +274,8 @@ def usage!(text=nil)
   STDERR.puts "    [-n|--not-uplink] (OPTIONAL) Sets port as an NOT an uplink port."
   STDERR.puts "                                 Cannot be used with --uplink or -u"
   STDERR.puts ""
+  STDERR.puts "  list_macs: List all active MACs"
+  STDERR.puts ""
   STDERR.puts "  scan: Perform interface and MAC scan"
   STDERR.puts ""
   STDERR.puts "Options Applicable to All Actions:"
@@ -297,6 +307,17 @@ def list_switchports(switchconfig)
                      ['switch_id', 'switchport_id', 'descr', 'name', 'portindex', 'bridgeport', 'uplink', 'active'],
                      ['Switch ID', 'Swithport ID', 'Description', 'Name', 'Port Index', 'Bridge Port', 'Uplink', 'Active'],
                      ['number', 'number', 'string', 'string', 'number', 'number', 'string', 'string'])
+  puts ""
+
+end
+
+def list_macs(switchconfig)
+  results = switchconfig.list_macs
+
+  pretty_print_table(results,
+                     ['switch_descr', 'switchport_descr', 'mac', 'mac_descr'],
+                     ['Switch', 'Port', 'MAC', 'Description'],
+                     ['string', 'string', 'string', 'string'])
   puts ""
 
 end
@@ -433,6 +454,8 @@ def main
     sc.modify_switchport(@options[:switchport_id],
                          @options[:descr],
                          @options[:uplink])
+  when 'list_macs'
+    list_macs(sc)
   when 'scan'
     scan(sc)
   end

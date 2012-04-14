@@ -342,4 +342,49 @@ class SwitchConfig
     return retvalue
   end
 
+  # List macs
+  #
+  # Filters out "uplink" ports and inactive MACs
+  #
+  # Arguments:
+  #   NONE currently
+  #
+  # Returns:
+  #   Array of hashs
+  #     Each array element represents one row (one mac entry)
+  #     Within each array element is a hash with the following keys;
+  #       switch_descr     -> Nice switch description
+  #       switchport_descr -> Nice switch port description
+  #       mac              -> MAC address
+  #       mac_descr        -> MAC description
+  def list_macs
+    db_cached_connect
+
+    retvalue = []
+
+    sql = "SELECT  S.descr switch_descr,
+                   SP.descr switchport_descr,
+                   M.mac mac,
+                   M.descr mac_descr
+           FROM    mac_history MH,
+                   switch S,
+                   switchport SP,
+                   mac M
+           WHERE   MH.mac_id = M.mac_id
+             AND   MH.switchport_id = SP.switchport_id
+             AND   SP.switch_id = S.switch_id
+             AND   NOW() BETWEEN MH.start_dt AND MH.end_dt
+             AND   SP.uplink = false
+           ORDER BY S.descr, SP.descr, M.mac, M.descr;"
+
+    @dbh.prepare(sql) do |sth|
+      sth.execute
+      sth.fetch_hash do |hash|
+        retvalue.push(hash)
+      end
+    end
+
+    return retvalue
+  end
+
 end

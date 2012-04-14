@@ -8,10 +8,10 @@
 -- then port pretty name.  Filters out uplinks.
 --
 
-SELECT	S.descr,
-	SP.descr,
-	M.mac,
-	M.descr
+SELECT	S.descr switch_descr,
+	SP.descr switchport_descr,
+	M.mac mac,
+	M.descr mac_descr
 FROM	mac_history MH,
 	switch S,
 	switchport SP,
