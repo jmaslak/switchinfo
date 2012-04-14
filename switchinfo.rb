@@ -32,6 +32,8 @@ def parse_opts!
       parse_opts_list_switches!
     when 'list_switchports'
       parse_opts_list_switchports!
+    when 'modify_switchport'
+      parse_opts_modify_switchport!
     when 'scan'
       parse_opts_scan!
     else
@@ -170,6 +172,51 @@ def parse_opts_list_switchports!
   end
 end
 
+def parse_opts_modify_switchport!
+  optparse = OptionParser.new do |opts|
+
+    opts.on('-s', '--switchport-id ID', 'Switchport ID from list_switchports') do |hostname|
+      @options[:switchport_id] = hostname
+    end
+
+    opts.on('-d', '--descr DESCRIPTION', 'Friendly description of switchport') do |descr|
+      @options[:descr] = descr
+    end
+
+    opts.on('-u', '--uplink', 'Set as uplink') do |community|
+      if @options.has_key?(:uplink)
+        usage!("Cannot modify the uplink characteristic twice!")
+      end
+      @options[:uplink] = 1
+    end
+
+    opts.on('-n', '--not-uplink', 'Set as NOT an uplink') do |community|
+      if @options.has_key?(:uplink)
+        usage!("Cannot modify the uplink characteristic twice!")
+      end
+      @options[:uplink] = 0
+    end
+  end
+  
+  optparse.parse!
+
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+  
+  if !@options[:switchport_id]
+    usage!("Must supply switchport-id (--switchport-id=...)")
+  end
+
+  if ! @options.has_key?(:uplink)
+    @options[:uplink] = nil
+  end
+
+  if ! @options.has_key?(:descr)
+    @options[:descr] = nil
+  end
+end
+
 def parse_opts_scan!
   if ARGV.size > 0
     usage!("Unknown arguments: #{ARGV.join(', ')}")
@@ -210,6 +257,14 @@ def usage!(text=nil)
   STDERR.puts "  list_switches: List all switches"
   STDERR.puts ""
   STDERR.puts "  list_switchports: List all switch ports"
+  STDERR.puts ""
+  STDERR.puts "  modify_switchport: Modifies a switchport.  Uses the following options:"
+  STDERR.puts "    [-s|--switchport-id ID] (REQUIRED) Switchport ID to modify"
+  STDERR.puts "    [-d|--descr] (OPTIONAL) New description to use for port"
+  STDERR.puts "    [-u|--uplink] (OPTIONAL) Sets port as an uplink port. Cannot be used"
+  STDERR.puts "                             with --not-uplink or -n"
+  STDERR.puts "    [-n|--not-uplink] (OPTIONAL) Sets port as an NOT an uplink port."
+  STDERR.puts "                                 Cannot be used with --uplink or -u"
   STDERR.puts ""
   STDERR.puts "  scan: Perform interface and MAC scan"
   STDERR.puts ""
@@ -374,6 +429,10 @@ def main
     list_switches(sc)
   when 'list_switchports'
     list_switchports(sc)
+  when 'modify_switchport'
+    sc.modify_switchport(@options[:switchport_id],
+                         @options[:descr],
+                         @options[:uplink])
   when 'scan'
     scan(sc)
   end
@@ -382,4 +441,3 @@ end
 # $USERDEBUG=1
 $USERDEBUG=nil
 main
-

@@ -318,4 +318,28 @@ class SwitchConfig
     @dbh.do("COMMIT TRANSACTION;")
   end
 
+  # Modify a switchport in the database
+  #
+  # To Modify: Provide switchport_id and any element (descr, uplink)
+  # that you wish to change.  Other elements should be passed as nil
+  #
+  # If an invalid switchport_id is passed, nil will be returned,
+  # otherwise true will be returned.
+  def modify_switchport(switchport_id, descr, uplink)
+    db_cached_connect
+
+    retvalue = nil
+
+    sql = 'SELECT editSwitchPort(?, ?, ?)'
+    @dbh.prepare(sql) do |sth|
+      sth.execute(switchport_id, descr, uplink)
+      sth.each do |row|
+        retvalue = row[0]
+        puts "Debug: #{retvalue}" if $DEBUG
+      end
+    end
+
+    return retvalue
+  end
+
 end
