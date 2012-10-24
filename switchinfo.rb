@@ -82,7 +82,7 @@ end
 def parse_opts_add_switch!
   optparse = OptionParser.new do |opts|
 
-    opts.on('-h', '--hostname HOSTNAME', 'Hostname of the switch') do |hostname|
+    opts.on('-n', '--hostname HOSTNAME', 'Hostname of the switch') do |hostname|
       @options[:hostname] = hostname
     end
 
