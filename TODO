@@ -2,7 +2,6 @@ TODOs:
 
 - Add confirmation to delete history (with force option)
 - Scan should handle off-line switches gracefully
-- Global option -h conflicts with add_switch -h
 - Add debug global option
 - Correct indenting in list_switches() SQL
 - Allow list_switchports to filter
