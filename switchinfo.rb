@@ -426,8 +426,9 @@ def pretty_print_value(val, type)
       ret.sub!(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):[0-9\.]*$/, '\1');
     end
   when 'duration'
+    ret = val.to_s
     if @options[:format] == :terse
-      ret = val.to_s.sub(/(\d{2}:\d{2}):[0-9\.]*$/, '\1');
+      ret.sub!(/(\d{2}:\d{2}):[0-9\.]*$/, '\1');
     end
   else
     ret = val.to_s
