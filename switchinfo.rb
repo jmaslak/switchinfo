@@ -57,22 +57,31 @@ def parse_global_opts!
   while options.size > 0
     opt = options.shift
 
+    case opt
+    when '--terse'
+      @options[:format] = :terse
+      ARGV.delete(opt)
+    when '--long'
+      @options[:format] = :long
+      ARGV.delete(opt)
+    end
+
     left = opt[/^[^=]*=?/]
     right = opt[/=(.*)$/, 1]
 
     case left
     when '--dbhost='
-      options[:dbhost] = right
-      ARGV.delete[opt]
+      @options[:dbhost] = right
+      ARGV.delete(opt)
     when '--dbuser='
-      options[:dbuser] = right
-      ARGV.delete[opt]
+      @options[:dbuser] = right
+      ARGV.delete(opt)
     when '--dbpass='
-      options[:dbpass] = right
-      ARGV.delete[opt]
+      @options[:dbpass] = right
+      ARGV.delete(opt)
     when '--database='
-      options[:dbdatabase] = right
-      ARGV.delete[opt]
+      @options[:dbdatabase] = right
+      ARGV.delete(opt)
     end
   end
 
@@ -80,6 +89,7 @@ def parse_global_opts!
   @options[:dbuser] ||= 'switch'
   @options[:dbpass] ||= 'switch'
   @options[:dbdatabase] ||= 'switch'
+  @options[:format] ||= :default
 end
 
 def parse_opts_add_switch!
@@ -313,6 +323,8 @@ def usage!(text=nil)
   STDERR.puts "  [--dbuser USERNAME] (Default: switch) Username of database user"
   STDERR.puts "  [--dbpass PASSWORD] (Default: switch) Database password"
   STDERR.puts "  [--database DBNAME] (Default: switch) Database catalog name"
+  STDERR.puts "  [--terse] Display short form of values"
+  STDERR.puts "  [--long] Display long form of values"
   STDERR.puts ""
   STDERR.puts ""
 
@@ -358,7 +370,7 @@ def mac_history(history)
   pretty_print_table(results,
                      ['switch_descr', 'switchport_descr', 'start_dt', 'end_dt', 'duration'],
                      ['Switch', 'Port', 'First Seen', 'Last Seen', 'Duration'],
-                     ['string', 'string', 'datetime', 'datetime', 'datetime'])
+                     ['string', 'string', 'datetime', 'datetime', 'duration'])
   puts ""
 end
 
@@ -398,6 +410,33 @@ def valid_mac?(mac)
   m =~ /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/
 end
 
+def pretty_print_value(val, type)
+
+  ret = ''
+
+  case type
+  when 'datetime'
+    if val.to_s == '9999-12-31 00:00:00'
+      ret = '-'
+    else
+      ret = val.to_s
+    end
+
+    if @options[:format] == :terse
+      ret.sub!(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):[0-9\.]*$/, '\1');
+    end
+  when 'duration'
+    if @options[:format] == :terse
+      ret = val.to_s.sub(/(\d{2}:\d{2}):[0-9\.]*$/, '\1');
+    end
+  else
+    ret = val.to_s
+  end
+
+  return ret
+
+end
+
 def pretty_print_table(table, columns, alias_list, type_list)
   eternity = 'NONE'
   widths = {}
@@ -418,22 +457,9 @@ def pretty_print_table(table, columns, alias_list, type_list)
  
   table.each do |row|
     columns.each do |col|
-      if typeinfo.has_key?(col) and typeinfo[col] == 'datetime'
-        if row[col].to_s == '9999-12-31 00:00:00'
-          if eternity.size > widths[col]
-            widths = eternity
-          end
-        else
-          if row[col].size > widths[col]
-            widths[col] = row[col].to_s.size
-          end
-        end
-
-      # Not infinite date
-      else
-        if row[col].size > widths[col]
-          widths[col] = row[col].to_s.size
-        end
+      ppv = pretty_print_value(row[col], typeinfo[col]).size
+      if ppv > widths[col]
+        widths[col] = ppv
       end
     end
   end
@@ -472,19 +498,13 @@ def pretty_print_table(table, columns, alias_list, type_list)
   table.each do |row|
     line = []
     columns.each do |col|
-      spaces_needed = widths[col] - row[col].length
+      ppv = pretty_print_value(row[col], typeinfo[col])
+      spaces_needed = widths[col] - ppv.length
 
       if typeinfo.has_key?(col) and typeinfo[col] == 'number'
-        out = space[0,spaces_needed] + row[col].to_s
-      elsif typeinfo.has_key?(col) and typeinfo[col] == 'datetime'
-        if row[col].to_s == '9999-12-31 00:00:00'
-          spaces_needed = widths[col] - eternity.size
-          out = eternity + space[0,spaces_needed]
-        else
-          out = row[col] + space[0,(spaces_needed)]
-        end
+        out = space[0,spaces_needed] + ppv
       else
-        out = row[col] + space[0,(spaces_needed)]
+        out = ppv + space[0,(spaces_needed)]
       end
 
       line.push(out)

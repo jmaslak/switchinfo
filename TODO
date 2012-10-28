@@ -11,4 +11,5 @@ TODOs:
 - Allow friendly way of specifying switchport (switch name/descr + port name/descr)
 - MAC address canonization - 00:00:00:00:00:00 is "canonical" form.  Allow
   0000.0000.0000 or 000000000000 forms
+- --terse and --long shouldn't both be allowed
 
