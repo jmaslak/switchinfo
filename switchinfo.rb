@@ -356,9 +356,9 @@ def mac_history(history)
   results = history.mac_history(@options[:mac])
 
   pretty_print_table(results,
-                     ['switch_descr', 'switchport_descr', 'start_dt', 'end_dt'],
-                     ['Switch', 'Port', 'First Seen', 'Last Seen'],
-                     ['string', 'string', 'datetime', 'datetime'])
+                     ['switch_descr', 'switchport_descr', 'start_dt', 'end_dt', 'duration'],
+                     ['Switch', 'Port', 'First Seen', 'Last Seen', 'Duration'],
+                     ['string', 'string', 'datetime', 'datetime', 'datetime'])
   puts ""
 end
 

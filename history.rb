@@ -70,7 +70,10 @@ class History
     sql = "SELECT  S.descr switch_descr,
                    SP.descr switchport_descr,
                    MH.start_dt,
-                   MH.end_dt
+                   MH.end_dt,
+                   CASE   WHEN MH.end_dt = '9999-12-31' THEN NOW() - MH.start_dt
+                          ELSE MH.end_dt - MH.start_dt
+                   END AS duration
            FROM    mac_history MH, 
                    switch S,
                    switchport SP, 
