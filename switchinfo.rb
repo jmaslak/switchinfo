@@ -6,6 +6,7 @@
 
 require 'optparse'
 
+require 'history.rb'
 require 'switch.rb'
 require 'switchconfig.rb'
 
@@ -36,6 +37,8 @@ def parse_opts!
       parse_opts_list_switchports!
     when 'modify_switchport'
       parse_opts_modify_switchport!
+    when 'mac_history'
+      parse_opts_mac_history!
     when 'scan'
       parse_opts_scan!
     else
@@ -225,6 +228,30 @@ def parse_opts_modify_switchport!
   end
 end
 
+def parse_opts_mac_history!
+  optparse = OptionParser.new do |opts|
+
+    opts.on('-m', '--mac-address MAC', 'address to lookup') do |mac|
+      @options[:mac] = mac
+    end
+  end
+
+  optparse.parse!
+
+  if ARGV.size > 0
+    usage!("Unknown arguments: #{ARGV.join(', ')}")
+  end
+
+  if ! @options.has_key?(:mac)
+    usage!("Must supply MAC address (--mac-address=...)")
+  end
+
+  if ! valid_mac?(@options[:mac])
+    usage!("MAC must be specified in format 01:23:45:67:89:ab")
+  end
+  
+end
+
 def parse_opts_scan!
   if ARGV.size > 0
     usage!("Unknown arguments: #{ARGV.join(', ')}")
@@ -276,6 +303,9 @@ def usage!(text=nil)
   STDERR.puts ""
   STDERR.puts "  list_macs: List all active MACs"
   STDERR.puts ""
+  STDERR.puts "  mac_history: Gets a history for a MAC address"
+  STDERR.puts "    [-m|--mac-address MAC] (REQUIRED) MAC address to lookup"
+  STDERR.puts ""
   STDERR.puts "  scan: Perform interface and MAC scan"
   STDERR.puts ""
   STDERR.puts "Options Applicable to All Actions:"
@@ -322,6 +352,16 @@ def list_macs(switchconfig)
 
 end
 
+def mac_history(history)
+  results = history.mac_history(@options[:mac])
+
+  pretty_print_table(results,
+                     ['switch_descr', 'switchport_descr', 'start_dt', 'end_dt'],
+                     ['Switch', 'Port', 'First Seen', 'Last Seen'],
+                     ['string', 'string', 'datetime', 'datetime'])
+  puts ""
+end
+
 def scan(switchconfig)
   
   switchconfig.startRun
@@ -352,7 +392,14 @@ def scan(switchconfig)
   switchconfig.endRun
 end
 
+def valid_mac?(mac)
+  m = mac.downcase
+
+  m =~ /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/
+end
+
 def pretty_print_table(table, columns, alias_list, type_list)
+  eternity = 'NONE'
   widths = {}
 
   aliases = {}
@@ -371,8 +418,22 @@ def pretty_print_table(table, columns, alias_list, type_list)
  
   table.each do |row|
     columns.each do |col|
-      if row[col].size > widths[col]
-        widths[col] = row[col].to_s.size
+      if typeinfo.has_key?(col) and typeinfo[col] == 'datetime'
+        if row[col].to_s == '9999-12-31 00:00:00'
+          if eternity.size > widths[col]
+            widths = eternity
+          end
+        else
+          if row[col].size > widths[col]
+            widths[col] = row[col].to_s.size
+          end
+        end
+
+      # Not infinite date
+      else
+        if row[col].size > widths[col]
+          widths[col] = row[col].to_s.size
+        end
       end
     end
   end
@@ -415,6 +476,13 @@ def pretty_print_table(table, columns, alias_list, type_list)
 
       if typeinfo.has_key?(col) and typeinfo[col] == 'number'
         out = space[0,spaces_needed] + row[col].to_s
+      elsif typeinfo.has_key?(col) and typeinfo[col] == 'datetime'
+        if row[col].to_s == '9999-12-31 00:00:00'
+          spaces_needed = widths[col] - eternity.size
+          out = eternity + space[0,spaces_needed]
+        else
+          out = row[col] + space[0,(spaces_needed)]
+        end
       else
         out = row[col] + space[0,(spaces_needed)]
       end
@@ -433,6 +501,11 @@ def main
                         @options[:dbuser],
                         @options[:dbpass],
                         @options[:dbdatabase])
+
+  hist = History.new(@options[:dbhost],
+                     @options[:dbuser],
+                     @options[:dbpass],
+                     @options[:dbdatabase])
 
   case @options[:action]
   when 'add_switch'
@@ -456,6 +529,8 @@ def main
                          @options[:uplink])
   when 'list_macs'
     list_macs(sc)
+  when 'mac_history'
+    mac_history(hist)
   when 'scan'
     scan(sc)
   end
