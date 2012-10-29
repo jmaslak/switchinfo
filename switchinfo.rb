@@ -68,9 +68,15 @@ def parse_global_opts!
     when 'help', '--help', '-h', '-?', '/?'
       usage!
     when '--terse'
+      if @options[:format]
+        usage!("Cannot specify --long with --terse")
+      end
       @options[:format] = :terse
       ARGV.delete(opt)
     when '--long'
+      if @options[:format]
+        usage!("Cannot specify --long with --terse")
+      end
       @options[:format] = :long
       ARGV.delete(opt)
     end

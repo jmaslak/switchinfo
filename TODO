@@ -9,6 +9,5 @@ TODOs:
 - Error out if someone modify_switch on an invalid switch
 - Error out if someone modify_switchport on an invalid switchport
 - Allow friendly way of specifying switchport (switch name/descr + port name/descr)
-- --terse and --long shouldn't both be allowed
 - Only display full usage if --help is passed in, otherwise keep it short.
 
