@@ -7,6 +7,7 @@
 require 'optparse'
 
 require 'history.rb'
+require 'mac.rb'
 require 'switch.rb'
 require 'switchconfig.rb'
 
@@ -256,10 +257,10 @@ def parse_opts_mac_history!
     usage!("Must supply MAC address (--mac-address=...)")
   end
 
-  if ! valid_mac?(@options[:mac])
+  if ! Mac.valid_mac?(@options[:mac])
     usage!("MAC must be specified in format 01:23:45:67:89:ab")
   end
-  @options[:mac] = cannonize_mac(@options[:mac])
+  @options[:mac] = Mac.cannonize_mac(@options[:mac])
   
 end
 
@@ -403,16 +404,6 @@ def scan(switchconfig)
   end
   
   switchconfig.endRun
-end
-
-def valid_mac?(mac)
-  m = mac.downcase
-
-  m =~ /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/
-end
-
-def cannonize_mac(mac)
-  mac.downcase
 end
 
 def pretty_print_value(val, type)

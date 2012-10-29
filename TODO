@@ -9,7 +9,7 @@ TODOs:
 - Error out if someone modify_switch on an invalid switch
 - Error out if someone modify_switchport on an invalid switchport
 - Allow friendly way of specifying switchport (switch name/descr + port name/descr)
-- MAC address canonization - 00:00:00:00:00:00 is "canonical" form.  Allow
-  0000.0000.0000 or 000000000000 forms
 - --terse and --long shouldn't both be allowed
+- Handle "broken pipe" (pipe to head, for instance)
+- Only display usage if --help is passed in
 
