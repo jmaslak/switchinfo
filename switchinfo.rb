@@ -22,8 +22,6 @@ def parse_opts!
     parse_global_opts!
 
     case @options[:action]
-    when 'help', '--help', '-h', '-?', '/?'
-      usage!
     when 'add_switch'
       parse_opts_add_switch!
     when 'modify_switch'
@@ -59,6 +57,8 @@ def parse_global_opts!
     opt = options.shift
 
     case opt
+    when 'help', '--help', '-h', '-?', '/?'
+      usage!
     when '--terse'
       @options[:format] = :terse
       ARGV.delete(opt)
