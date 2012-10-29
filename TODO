@@ -10,6 +10,5 @@ TODOs:
 - Error out if someone modify_switchport on an invalid switchport
 - Allow friendly way of specifying switchport (switch name/descr + port name/descr)
 - --terse and --long shouldn't both be allowed
-- Handle "broken pipe" (pipe to head, for instance)
 - Only display usage if --help is passed in
 

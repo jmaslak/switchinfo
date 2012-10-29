@@ -434,7 +434,7 @@ def pretty_print_value(val, type)
 
 end
 
-def pretty_print_table(table, columns, alias_list, type_list)
+def pretty_print_table_output(table, columns, alias_list, type_list)
   eternity = 'NONE'
   widths = {}
 
@@ -507,6 +507,15 @@ def pretty_print_table(table, columns, alias_list, type_list)
       line.push(out)
     end
     puts line.join(' | ')
+  end
+end
+
+def pretty_print_table(table, columns, alias_list, type_list)
+  begin
+    pretty_print_table_output(table, columns, alias_list, type_list)
+  rescue Errno::EPIPE
+    # Do nothing - we don't mind this error here (it's probably
+    # someone using "head" or similar)
   end
 end
 
