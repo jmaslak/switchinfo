@@ -11,4 +11,5 @@ TODOs:
 - Allow friendly way of specifying switchport (switch name/descr + port name/descr)
 - --terse and --long shouldn't both be allowed
 - Only display usage if --help is passed in
+- --help is broken
 
