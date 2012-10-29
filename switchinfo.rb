@@ -16,36 +16,44 @@ def parse_opts!
 
   @options = {}
 
-  if ARGV.size > 0
-    @options[:action] = ARGV.shift
+  begin
 
-    parse_global_opts!
-
-    case @options[:action]
-    when 'add_switch'
-      parse_opts_add_switch!
-    when 'modify_switch'
-      parse_opts_modify_switch!
-    when 'delete_switch'
-      parse_opts_delete_switch!
-    when 'list_switches'
-      parse_opts_list_switches!
-    when 'list_macs'
-      parse_opts_list_macs!
-    when 'list_switchports'
-      parse_opts_list_switchports!
-    when 'modify_switchport'
-      parse_opts_modify_switchport!
-    when 'mac_history'
-      parse_opts_mac_history!
-    when 'scan'
-      parse_opts_scan!
+    if ARGV.size > 0
+      @options[:action] = ARGV.shift
+  
+      parse_global_opts!
+  
+      case @options[:action]
+      when 'add_switch'
+        parse_opts_add_switch!
+      when 'modify_switch'
+        parse_opts_modify_switch!
+      when 'delete_switch'
+        parse_opts_delete_switch!
+      when 'list_switches'
+        parse_opts_list_switches!
+      when 'list_macs'
+        parse_opts_list_macs!
+      when 'list_switchports'
+        parse_opts_list_switchports!
+      when 'modify_switchport'
+        parse_opts_modify_switchport!
+      when 'mac_history'
+        parse_opts_mac_history!
+      when 'scan'
+        parse_opts_scan!
+      else
+        usage!("Unknown action: #{@options[:action]}")
+      end
+  
     else
-      usage!("Unknown action: #{@options[:action]}")
+      usage!("Must supply an action")
     end
 
-  else
-    usage!("Must supply an action")
+  rescue OptionParser::InvalidOption => e
+    msg = e.message
+    msg.sub!(/invalid option: /, '')
+    usage!("Invalid option provided: #{msg}")
   end
 end
 
@@ -274,7 +282,9 @@ end
 def usage!(text=nil)
   if text
     STDERR.puts text
+    STDERR.puts "Use \"#{$0} --help\" for detailed usage"
     STDERR.puts ""
+    exit 1
   end
 
   STDERR.puts "#{$0} [-a|--action] ACTION [options]"
@@ -330,7 +340,7 @@ def usage!(text=nil)
   STDERR.puts ""
   STDERR.puts ""
 
-  exit 1
+  exit 0 # It's not a problem to ask for help!
 end
 
 def list_switches(switchconfig)
